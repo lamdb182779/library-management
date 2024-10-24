@@ -21,6 +21,11 @@ const testDB = async () => {
         console.log('Found Tag:', tag);
 
 
+        
+        const allBooks = await Book.findAll();
+        console.log('tat ca sach:', allBooks);
+
+
 
     } catch (error) {
         console.error('Error:', error);
