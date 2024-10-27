@@ -12,7 +12,7 @@ app.use(cors({
     credentials: true,
     origin: true
 }))
-//TungLam add
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
