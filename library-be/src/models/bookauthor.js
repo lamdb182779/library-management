@@ -15,11 +15,11 @@ module.exports = (sequelize, DataTypes) => {
   }
   BookAuthor.init({
     bookId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       primaryKey: true
     },
     authorId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       primaryKey: true
     }
   }, {
