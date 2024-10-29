@@ -1,4 +1,4 @@
-const Author = require('../models/author');
+const Author = require('../models/author.js');
 
 // Lấy danh sách tác giả
 // exports.getAllAuthors = async (req, res) => {
