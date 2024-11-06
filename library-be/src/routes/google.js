@@ -7,10 +7,12 @@ const google = (route) => {
         passport.authenticate('google', { scope: ['profile', 'email'] }));
 
     router.get('/redirect',
-        passport.authenticate('google', { failureRedirect: '/login' }),
+        passport.authenticate('google', { failureRedirect: '/redirect' }),
         function (req, res) {
+            console.log("hello");
+
             // Successful authentication, redirect home.
-            res.redirect('/');
+            res.redirect('/redirect');
         });
 
     return route.use("/auth/google", router)

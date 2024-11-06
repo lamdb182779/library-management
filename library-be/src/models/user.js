@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      // Thiết lập quan hệ N-N với bảng User qua bảng BookReader
+      this.belongsToMany(models.Book, { through: 'BookReaders', foreignKey: 'readerId', onDelete: 'CASCADE' });
     }
   }
   User.init({

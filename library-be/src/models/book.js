@@ -13,6 +13,8 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsToMany(models.Tag, { through: 'BookTags', foreignKey: 'bookId', onDelete: 'CASCADE' });
       // Thiết lập quan hệ N-N với bảng Position qua bảng BookPosition
       this.belongsToMany(models.Position, { through: 'BookPositions', foreignKey: 'bookId', onDelete: 'CASCADE' });
+      // Thiết lập quan hệ N-N với bảng User qua bảng BookReader
+      this.belongsToMany(models.User, { through: 'BookReaders', foreignKey: 'bookId', onDelete: 'CASCADE' });
     }
   }
 

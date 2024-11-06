@@ -16,6 +16,8 @@ const loginWithGoogle = () => passport.use(new GoogleStrategy({
 },
     async function (accessToken, refreshToken, profile, cb) {
         try {
+            console.log(profile);
+
             const [user, created] = await db.User.findOrCreate({
                 where: {
                     id: profile.id,
