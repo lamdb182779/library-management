@@ -4,7 +4,7 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('BookTags', {
       bookId: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'Books',
@@ -13,7 +13,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       tagId: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'Tags',

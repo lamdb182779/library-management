@@ -4,12 +4,14 @@ require("dotenv").config();
 module.exports = {
   development: {
     url: process.env.DB_URL,
+    dialect: process.env.DB_CONNECTION,
     dialectOptions: {
       ssl: {
         require: true,
         rejectUnauthorized: false
       }
     },
+    logging: false,
   },
   // test: {
   //   username: process.env.CI_DB_USERNAME,

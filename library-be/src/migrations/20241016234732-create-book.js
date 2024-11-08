@@ -6,14 +6,15 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.STRING
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4
       },
       name: {
         allowNull: false,
         type: Sequelize.STRING
       },
       publisherId: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         references: {
           model: 'Publishers',
           key: 'id'

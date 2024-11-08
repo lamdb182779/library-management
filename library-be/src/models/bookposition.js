@@ -15,11 +15,11 @@ module.exports = (sequelize, DataTypes) => {
   }
   BookPosition.init({
     bookId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       primaryKey: true
     },
     positionId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
       primaryKey: true
     }
   }, {
