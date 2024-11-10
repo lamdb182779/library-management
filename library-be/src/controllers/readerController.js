@@ -1,4 +1,4 @@
-const { Reader, Book, BookReader, BookAuthor, BookTag, Publisher, Author, Tag } = require('../models');
+const { Reader, Book, BookReader, Publisher, Author, Tag } = require('../models');
 const { Op } = require('sequelize');
 
 const ReaderController = {
