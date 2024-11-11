@@ -93,3 +93,28 @@ exports.updateBook = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// Lấy thông tin sách theo ID hoặc tất cả nếu không có ID
+exports.getBooks = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Nếu `id` tồn tại, tìm sách theo ID
+        if (id) {
+            const book = await Book.findByPk(id);
+
+            if (!book) {
+                return res.status(404).json({ message: 'Book not found' });
+            }
+
+            return res.status(200).json(book);
+        } 
+
+        // Nếu không có `id`, trả về tất cả sách
+        const books = await Book.findAll();
+        return res.status(200).json(books);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message });
+    }
+};

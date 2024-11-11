@@ -83,3 +83,28 @@ exports.updatePosition = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// Lấy thông tin vị trí theo ID hoặc tất cả nếu không có ID
+exports.getPositions = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Nếu `id` tồn tại, tìm vị trí theo ID
+        if (id) {
+            const position = await Position.findByPk(id);
+
+            if (!position) {
+                return res.status(404).json({ message: 'Position not found' });
+            }
+
+            return res.status(200).json(position);
+        } 
+
+        // Nếu không có `id`, trả về tất cả vị trí
+        const positions = await Position.findAll();
+        return res.status(200).json(positions);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message });
+    }
+};
