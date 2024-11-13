@@ -13,7 +13,7 @@ const sess = (app) => {
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: true
+            secure: false,
         },
         store
     }))
@@ -24,8 +24,9 @@ const sess = (app) => {
 
     passport.serializeUser(function (user, cb) {
         console.log("check before");
+
         process.nextTick(function () {
-            cb(null, { id: user.id, username: user.username, name: user.name });
+            cb(null, user);
         });
     });
 

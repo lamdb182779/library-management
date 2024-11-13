@@ -40,14 +40,14 @@ exports.deleteTag = async (req, res) => {
 
         // Kiểm tra xem tag với `id` có tồn tại không
         const tag = await Tag.findByPk(id);
-        
+
         if (!tag) {
             return res.status(404).json({ message: 'Tag not found' });
         }
 
         // Xóa tag
         await tag.destroy();
-        
+
         return res.status(200).json({ message: 'Tag deleted successfully' });
     } catch (error) {
         console.log(error);
@@ -59,11 +59,11 @@ exports.deleteTag = async (req, res) => {
 exports.updateTag = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, image, describe } = req.body;
+        const { name, describe } = req.body;
 
         // Kiểm tra xem tag với `id` có tồn tại không
         const tag = await Tag.findByPk(id);
-        
+
         if (!tag) {
             return res.status(404).json({ message: 'Tag not found' });
         }
@@ -75,7 +75,6 @@ exports.updateTag = async (req, res) => {
 
         // Cập nhật thông tin mới cho tag
         tag.name = name || tag.name;
-        tag.image = image || tag.image;
         tag.describe = describe || tag.describe;
 
         await tag.save();

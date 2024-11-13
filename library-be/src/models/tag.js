@@ -17,7 +17,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     name: DataTypes.STRING,
     describe: DataTypes.TEXT,
-    image: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Tag',

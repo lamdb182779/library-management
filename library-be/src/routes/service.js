@@ -1,16 +1,33 @@
-require("dotenv").config()
-
 const express = require("express")
 const router = express.Router()
 
-const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN
-
 const service = (route) => {
-    router.get("/redirect", (req, res) => {
-        console.log("user", req.user);
-        return res.redirect(CLIENT_DOMAIN)
+
+    router.get("/check-login", (req, res) => {
+        if (req.user) {
+            return res.status(200).json({
+                message: "Logged in!",
+                user: req.user
+            })
+        }
+        else return res.status(200).json({
+            message: "Not logged in!"
+        })
     })
 
+    router.get("/logout", (req, res) => {
+        req.logout(error => {
+            if (error) {
+                console.log("Cannot log out! Error:", error)
+                return res.status(500).json({
+                    message: "Server error!"
+                })
+            }
+            return res.status(200).json({
+                message: "Log out successfully!"
+            })
+        })
+    })
 
     return route.use("/", router)
 }

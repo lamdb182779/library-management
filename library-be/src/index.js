@@ -8,7 +8,7 @@ const port = 8080
 const route = require("./routes/route.js")
 const { conn } = require("./config/connect.js")
 const loginWithGoogle = require("./controllers/google.js")
-const sess = require("./config/sesson.js")
+const sess = require("./config/session.js")
 
 app.use(cors({
     credentials: true,
