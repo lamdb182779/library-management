@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useParams, usePathname, useRouter } from "next/navigation"
 
 import GoogleIcon from "./svg/google"
 import Image from 'next/image'
@@ -13,18 +13,30 @@ import Link from "next/link"
 import { DropdownMenuContent, DropdownMenu, DropdownMenuTrigger, DropdownMenuItem } from "./ui/dropdown-menu"
 import { LucideLogOut, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { MouseEvent } from "react"
+import { MouseEvent, useEffect } from "react"
 import { Button } from "./ui/button"
 
 export default function Header() {
+    const globals = ["/", "/search"]
+
     const { theme, setTheme } = useTheme()
 
-    const { data, mutate } = useSWR(
+    const { data, mutate, isLoading } = useSWR(
         "/check-login",
         fetcher
     )
 
     const router = useRouter()
+    const path = usePathname()
+
+    useEffect(() => {
+        if (data?.message === "Not logged in!") {
+            if (!globals.includes(path)) {
+                handleLogin()
+            }
+        }
+    }, [isLoading])
+
     const handleLogin = () => {
         router.push("/login")
     }

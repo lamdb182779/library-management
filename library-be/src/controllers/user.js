@@ -1,13 +1,14 @@
-const { Op } = require("sequelize")
+const { Op, where } = require("sequelize")
 const db = require("../models")
 
+const roles = [1, 2, 3]
+
 exports.getAllUser = async (req, res) => {
-    if (!req.user || req.user.role !== 1) return res.status(500).json({
-        message: "You don't have this permission!"
-    })
-    let { page = 1, pagesize = 5, keyword, types = "email-name" } = req.body
-    page = parseInt(page)
-    pagesize = parseInt(pagesize)
+    let { page = 1, pagesize = 5, keyword, types = "email-name" } = req.query
+
+    page = parseInt(page) || 1
+    pagesize = parseInt(pagesize) || 5
+    types = types || "email-name"
     pagesize = pagesize > 15 ? 15 : pagesize
 
     types = types.split("-")
@@ -33,12 +34,45 @@ exports.getAllUser = async (req, res) => {
         return res.status(200).json({
             message: "Get data successfully!",
             result: rows,
-            count: count
+            pageCount: Math.ceil(count / pagesize)
         })
     } catch (error) {
         console.log("Cannot get data! Error:", error)
         return res.status(500).json({
             message: "Server error!",
+        })
+    }
+}
+
+exports.changeRole = async (req, res) => {
+    let id = req.params.id.toString()
+
+    let { role } = req.body
+    role = roles.includes(parseInt(role)) ? parseInt(role) : 3
+
+    try {
+        let data = await db.User.update({ role: role }, {
+            where: {
+                id: id,
+                role: {
+                    [Op.ne]: 1
+                }
+            }
+        })
+
+        if (data[0] === 0) {
+            console.log("Cannot update user!")
+            return res.status(500).json({
+                message: "Cannot update user!"
+            })
+        }
+        return res.status(200).json({
+            message: "Update user successfully!"
+        })
+    } catch (error) {
+        console.log("Cannot update user! Error: ", error)
+        return res.status(500).json({
+            message: "server error!"
         })
     }
 }
