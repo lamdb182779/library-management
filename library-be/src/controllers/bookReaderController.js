@@ -32,7 +32,29 @@ const bookReaderController = {
     } catch (error) {
       res.status(500).json({ message: 'Lỗi khi thêm phiếu mượn', error });
     }
-  }
+  },
+  // Trả sách
+  returnBook: async (req, res) => {
+    const { readerId, bookId } = req.body;
+
+    try {
+      const bookReader = await BookReader.findOne({
+        where: { readerId, bookId, isReturned: false }
+      });
+
+      if (!bookReader) {
+        return res.status(404).json({ message: 'Không tìm thấy phiếu mượn' });
+      } else {
+        bookReader.isReturned = true;
+        bookReader.returnedDate = new Date();
+        await bookReader.save();
+        res.status(200).json({ message: 'Trả sách thành công', bookReader });
+      }
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi trả sách', error });
+    }
+  },
+
 };
 
 module.exports = bookReaderController;
