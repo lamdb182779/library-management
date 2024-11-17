@@ -83,3 +83,28 @@ exports.updatePublisher = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// Lấy thông tin nhà xuất bản theo ID hoặc tất cả nếu không có ID
+exports.getPublisher = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Nếu `id` tồn tại, tìm nhà xuất bản theo ID
+        if (id) {
+            const publisher = await Publisher.findByPk(id);
+
+            if (!publisher) {
+                return res.status(404).json({ message: 'Publisher not found' });
+            }
+
+            return res.status(200).json(publisher);
+        } 
+
+        // Nếu không có `id`, trả về tất cả nhà xuất bản
+        const publishers = await Publisher.findAll();
+        return res.status(200).json(publishers);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message });
+    }
+};
