@@ -86,3 +86,27 @@ exports.updateTag = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+exports.getTag = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Nếu `id` tồn tại, tìm tag theo ID
+        if (id) {
+            const tag = await Tag.findByPk(id);
+
+            if (!tag) {
+                return res.status(404).json({ message: 'Tag not found' });
+            }
+
+            return res.status(200).json(tag);
+        } 
+
+        // Nếu không có `id`, trả về tất cả tag
+        const tags = await Tag.findAll();
+        return res.status(200).json(tags);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message });
+    }
+};

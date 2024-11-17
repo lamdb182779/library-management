@@ -93,3 +93,51 @@ exports.updateBook = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// Lấy thông tin sách theo ID hoặc tất cả nếu không có ID, hỗ trợ phân trang
+exports.getBooks = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { page } = req.params; 
+
+        // Nếu `id` tồn tại, tìm sách theo ID
+        if (id) {
+            const book = await Book.findByPk(id);
+
+            if (!book) {
+                return res.status(404).json({ message: 'Book not found' });
+            }
+
+            return res.status(200).json(book);
+        }
+
+        // Kiểm tra nếu có tham số `page`
+        if (page !== undefined) {
+            // Kiểm tra `page` có phải là số nguyên dương hay không
+            const pageNumber = parseInt(page, 10);
+            if (isNaN(pageNumber) || pageNumber <= 0) {
+                return res.status(404).json({ message: 'Not Found' });
+            }
+
+            // Phân trang
+            const pageSize = 10;
+            const offset = (pageNumber - 1) * pageSize;
+
+            // Truy vấn sách theo trang
+            const books = await Book.findAll({ offset, limit: pageSize });
+
+            if (books.length === 0) {
+                return res.status(404).json({ message: 'Not Found' });
+            }
+
+            return res.status(200).json(books);
+        }
+
+        // Nếu không có tham số `page`, trả về tất cả sách
+        const books = await Book.findAll();
+        return res.status(200).json(books);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: error.message });
+    }
+};
