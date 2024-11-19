@@ -1,4 +1,4 @@
-const Author = require('../models/author');
+const db = require('../models');
 
 //Thêm tác giả
 exports.addAuthor = async (req, res) => {
@@ -13,15 +13,15 @@ exports.addAuthor = async (req, res) => {
 
         // Nếu `id` được cung cấp, kiểm tra xem nó có tồn tại trong bảng Authors hay chưa
         if (id) {
-            const existingAuthor = await Author.findByPk(id);
+            const existingAuthor = await db.Author.findByPk(id);
             console.log(existingAuthor);
             if (existingAuthor) {
                 return res.status(400).json({ message: 'Author with the given ID already exists' });
             }
         }
 
-        const newAuthor = await Author.create({
-            id: id || undefined, // Nếu `id` là null sẽ tự tạo UUID
+        const newAuthor = await db.Author.create({
+            id: id || undefined,
             name,
             image,
             describe
@@ -40,15 +40,15 @@ exports.deleteAuthor = async (req, res) => {
         const { id } = req.params;
 
         // Kiểm tra xem tác giả với `id` có tồn tại không
-        const author = await Author.findByPk(id);
-        
+        const author = await db.Author.findByPk(id);
+
         if (!author) {
             return res.status(404).json({ message: 'Author not found' });
         }
 
         // Xóa tác giả
         await author.destroy();
-        
+
         return res.status(200).json({ message: 'Author deleted successfully' });
     } catch (error) {
         console.log(error);
@@ -59,14 +59,14 @@ exports.deleteAuthor = async (req, res) => {
 //Cập nhật tác giả
 exports.updateAuthor = async (req, res) => {
     try {
-        const {id, name, image, describe } = req.body;
-        
+        const { id, name, image, describe } = req.body;
+
         // Kiểm tra quyền: Chỉ cho phép admin hoặc người dùng có quyền chỉnh sửa
 
-        
+
         // Kiểm tra xem tác giả với `id` có tồn tại không
-        const author = await Author.findByPk(id);
-        
+        const author = await db.Author.findByPk(id);
+
         if (!author) {
             return res.status(404).json({ message: 'Author not found' });
         }
@@ -98,17 +98,17 @@ exports.getAuthors = async (req, res) => {
 
         // Nếu `id` tồn tại, tìm tác giả theo ID
         if (id) {
-            const author = await Author.findByPk(id);
+            const author = await db.Author.findByPk(id);
 
             if (!author) {
                 return res.status(404).json({ message: 'Author not found' });
             }
 
             return res.status(200).json(author);
-        } 
+        }
 
         // Nếu không có `id`, trả về tất cả tác giả
-        const authors = await Author.findAll();
+        const authors = await db.Author.findAll();
         return res.status(200).json(authors);
     } catch (error) {
         console.log(error);

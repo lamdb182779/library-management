@@ -51,10 +51,10 @@ export default function Home() {
                 </div>
                 <Button variant={"outline"} onClick={() => handleSearch()}>Tìm kiếm</Button>
             </div>
-            <div className="text-center text-xl">Danh sách người dùng</div>
-            <div className="w-full items-center flex flex-col gap-5">
-                {data?.result?.length > 0 &&
-                    <>
+            {data?.result?.length > 0 ?
+                <>
+                    <div className="text-center text-xl">Danh sách người dùng</div>
+                    <div className="w-full items-center flex flex-col gap-5">
                         <div className="w-3/5">
                             <Table>
                                 <TableHeader>
@@ -77,9 +77,11 @@ export default function Home() {
                             </Table>
                         </div>
                         <PaginationC page={page} length={data?.pageCount} handlePage={handlePage} />
-                    </>
-                }
-            </div>
+                    </div>
+                </>
+                :
+                <div className="text-center">Không tìm thấy người dùng</div>
+            }
         </div>
     )
 }
