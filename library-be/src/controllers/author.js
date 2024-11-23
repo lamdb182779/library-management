@@ -9,19 +9,21 @@ exports.addAuthor = async (req, res) => {
             return res.status(400).json({ message: 'Author name must be a valid' });
         }
 
-        const { id, name, image, describe } = req.body;
+        const { name, describe } = req.body;
+        const image = req.file ? req.file.path : null; // Lấy đường dẫn ảnh từ Cloudinary
+
 
         // Nếu `id` được cung cấp, kiểm tra xem nó có tồn tại trong bảng Authors hay chưa
-        if (id) {
-            const existingAuthor = await db.Author.findByPk(id);
-            console.log(existingAuthor);
-            if (existingAuthor) {
-                return res.status(400).json({ message: 'Author with the given ID already exists' });
-            }
-        }
+        // if (id) {
+        //     const existingAuthor = await db.Author.findByPk(id);
+        //     console.log(existingAuthor);
+        //     if (existingAuthor) {
+        //         return res.status(400).json({ message: 'Author with the given ID already exists' });
+        //     }
+        // }
 
         const newAuthor = await db.Author.create({
-            id: id || undefined,
+            // id: uuidv4(),
             name,
             image,
             describe

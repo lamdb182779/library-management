@@ -9,7 +9,9 @@ exports.addBook = async (req, res) => {
             return res.status(400).json({ message: 'Book name must be valid' });
         }
 
-        const { id, name, publisherId, image, describe, quantity } = req.body;
+        const { id, name, publisherId, describe, quantity } = req.body;
+        const image = req.file ? req.file.path : null; // Lấy đường dẫn ảnh từ Cloudinary
+
 
         // Nếu `id` được cung cấp, kiểm tra xem nó có tồn tại trong bảng Books hay chưa
         if (id) {
