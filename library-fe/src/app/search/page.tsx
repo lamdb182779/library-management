@@ -57,7 +57,7 @@ export default function Home() {
                     <>
                         <div className="text-center text-xl">Kho sách hiện có</div>
                         <div className="w-full items-center flex flex-col gap-5">
-                            <div className="flex flex-wrap gap-10 justify-between px-20">
+                            <div className="grid grid-cols-5 gap-10 px-20">
                                 {data.result.map((item: any) => <Book key={item.id} book={item} />)}
                             </div>
                             <PaginationC page={page} length={data?.pageCount} handlePage={handlePage} />
