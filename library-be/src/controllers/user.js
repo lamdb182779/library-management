@@ -1,4 +1,4 @@
-const { Op, where } = require("sequelize")
+const { Op } = require("sequelize")
 const db = require("../models")
 
 const roles = [1, 2, 3]
@@ -28,7 +28,7 @@ exports.getAllUser = async (req, res) => {
             where: find,
             limit: pagesize,
             offset: skip,
-            attributes: ["id", "email", "name", "role"]
+            attributes: ["id", "email", "name", req?.user?.role === 1 && "role", "image"].filter(Boolean)
         })
 
         return res.status(200).json({

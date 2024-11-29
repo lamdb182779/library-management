@@ -1,3 +1,4 @@
+import { toast } from "@/hooks/use-toast"
 import axios from "axios"
 
 const SERVER_DOMAIN = process.env.NEXT_PUBLIC_SERVER_DOMAIN
@@ -19,4 +20,46 @@ export const logout = async () => {
 
 export const updater = async (path: string, { arg }: { arg: object }) => axiosInstance.put(path, arg, {
     withCredentials: true
-}).then(res => res.data)
+})
+    .then(res => {
+        toast({
+            description: res?.data?.message || "Cập nhật thành công"
+        })
+        return res.data
+    }).catch(error => {
+        toast({
+            description: error?.response?.data?.message || "Cập nhật thất bại",
+            variant: "destructive"
+        })
+    })
+
+export const poster = async (path: string, { arg }: { arg: object }) => axiosInstance.post(path, arg, {
+    withCredentials: true
+})
+    .then(res => {
+        toast({
+            description: res?.data?.message || "Thêm mới thành công"
+        })
+        return res.data
+    }).catch(error => {
+        toast({
+            description: error?.response?.data?.message || "Thêm mới thất bại",
+            variant: "destructive"
+        })
+    })
+
+export const deleter = async (path: string, { arg }: { arg: object }) => axiosInstance.delete(path, {
+    data: arg,
+    withCredentials: true
+})
+    .then(res => {
+        toast({
+            description: res?.data?.message || "Thêm mới thành công"
+        })
+        return res.data
+    }).catch(error => {
+        toast({
+            description: error?.response?.data?.message || "Thêm mới thất bại",
+            variant: "destructive"
+        })
+    })
