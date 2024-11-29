@@ -1,38 +1,64 @@
-const Book = require('../models/book');
+const db = require('../models');
+const { Op, fn, col, literal } = require("sequelize")
 
 // Thêm sách
 exports.addBook = async (req, res) => {
     try {
         // Kiểm tra xem name có được cung cấp và hợp lệ hay không
         if (!req.body.name || typeof req.body.name !== 'string' || req.body.name.trim() === '') {
-            console.log('Book name must be valid');
-            return res.status(400).json({ message: 'Book name must be valid' });
+            console.log('db.Book name must be valid');
+            return res.status(400).json({ message: 'Tên sách không hợp lệ!' });
         }
 
-        const { id, name, publisherId, image, describe, quantity } = req.body;
+        const { name, publisherId, image, describe, quantity, authorIds, positionIds, tagIds } = req.body
 
-        // Nếu `id` được cung cấp, kiểm tra xem nó có tồn tại trong bảng Books hay chưa
-        if (id) {
-            const existingBook = await Book.findByPk(id);
-            console.log(existingBook);
-            if (existingBook) {
-                return res.status(400).json({ message: 'Book with the given ID already exists' });
-            }
+        if (quantity < 1) return res.status(500).json({ message: 'Số lượng sách không hợp lệ!' })
+
+        if (!Array.isArray(authorIds)) {
+            return res.status(500).json({ message: 'Danh sách tác giả không hợp lệ!' });
         }
 
-        const newBook = await Book.create({
-            id: id || undefined, // Nếu `id` là null sẽ tự tạo UUID
+        if (!Array.isArray(tagIds)) {
+            return res.status(500).json({ message: 'Danh sách thể loại không hợp lệ!' });
+        }
+
+        if (!Array.isArray(positionIds)) {
+            return res.status(500).json({ message: 'Danh sách vị trí không hợp lệ!' });
+        }
+
+        const newBook = await db.Book.create({
             name,
-            publisherId,
+            publisherId: publisherId,
             image,
             describe,
             quantity
         });
 
+        for (const authorId of authorIds) {
+            await db.BookAuthor.create({
+                bookId: newBook.id,
+                authorId,
+            })
+        }
+
+        for (const positionId of positionIds) {
+            await db.BookPosition.create({
+                bookId: newBook.id,
+                positionId,
+            })
+        }
+
+        for (const tagId of tagIds) {
+            await db.BookTag.create({
+                bookId: newBook.id,
+                tagId,
+            })
+        }
+
         return res.status(201).json({ message: 'Book created successfully', book: newBook });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };
 
@@ -42,34 +68,63 @@ exports.deleteBook = async (req, res) => {
         const { id } = req.params;
 
         // Kiểm tra xem sách với `id` có tồn tại không
-        const book = await Book.findByPk(id);
-        
+        const book = await db.Book.findByPk(id);
+
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
 
         // Xóa sách
         await book.destroy();
-        
+
         return res.status(200).json({ message: 'Book deleted successfully' });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };
 
 // Cập nhật sách
 exports.updateBook = async (req, res) => {
     try {
-        const { id, name, publisherId, image, describe, quantity } = req.body;
-        
-        // Kiểm tra quyền: Chỉ cho phép admin hoặc người dùng có quyền chỉnh sửa
-        
-        // Kiểm tra xem sách với `id` có tồn tại không
-        const book = await Book.findByPk(id);
-        
+        const { id } = req.params
+        const { name, publisherId, image, describe, quantity, authorIds, positionIds, tagIds } = req.body
+        const book = await db.Book.findByPk(id, {
+            include: [
+                {
+                    model: db.Author,
+                    attributes: ['id'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Position,
+                    attributes: ['id'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Tag,
+                    attributes: ['id'],
+                    through: { attributes: [] },
+                },
+            ]
+        });
+
         if (!book) {
-            return res.status(404).json({ message: 'Book not found' });
+            return res.status(404).json({ message: 'Không tìm thấy mã sách!' });
+        }
+
+        if (quantity < 1) return res.status(500).json({ message: 'Số lượng sách không hợp lệ!' })
+
+        if (!Array.isArray(authorIds)) {
+            return res.status(500).json({ message: 'Danh sách tác giả không hợp lệ!' });
+        }
+
+        if (!Array.isArray(tagIds)) {
+            return res.status(500).json({ message: 'Danh sách thể loại không hợp lệ!' });
+        }
+
+        if (!Array.isArray(positionIds)) {
+            return res.status(500).json({ message: 'Danh sách vị trí không hợp lệ!' });
         }
 
         // Kiểm tra tính hợp lệ của tên nếu có
@@ -86,58 +141,330 @@ exports.updateBook = async (req, res) => {
 
         await book.save();
 
+        const curAuthorIds = book.Authors.map(item => item.id)
+        const curTagIds = book.Tags.map(item => item.id)
+        const curPositionIds = book.Positions.map(item => item.id)
+
+        const authorsToDelete = curAuthorIds.filter(id => !authorIds.includes(id));
+
+        if (authorsToDelete.length > 0) {
+            await db.BookAuthor.destroy({
+                where: {
+                    authorId: { [Op.in]: authorsToDelete },
+                    bookId: book.id,
+                }
+            });
+        }
+
+        const authorsToAdd = authorIds.filter(id => !curAuthorIds.includes(id));
+
+        for (const authorId of authorsToAdd) {
+            await db.BookAuthor.create({
+                bookId: book.id,
+                authorId,
+            });
+        }
+
+        const tagsToDelete = curTagIds.filter(id => !tagIds.includes(id));
+        if (tagsToDelete.length > 0) {
+            await db.BookTag.destroy({
+                where: {
+                    tagId: { [Op.in]: tagsToDelete },
+                    bookId: book.id,
+                }
+            });
+        }
+
+        const positionsToDelete = curPositionIds.filter(id => !positionIds.includes(id));
+        if (positionsToDelete.length > 0) {
+            await db.BookPosition.destroy({
+                where: {
+                    positionId: { [Op.in]: positionsToDelete },
+                    bookId: book.id,
+                }
+            });
+        }
+
+        const tagsToAdd = tagIds.filter(id => !curTagIds.includes(id));
+        for (const tagId of tagsToAdd) {
+            await db.BookTag.create({
+                bookId: book.id,
+                tagId,
+            });
+        }
+
+        const positionsToAdd = positionIds.filter(id => !curPositionIds.includes(id));
+        for (const positionId of positionsToAdd) {
+            await db.BookPosition.create({
+                bookId: book.id,
+                positionId,
+            });
+        }
+
+
         // Trả về phản hồi thành công với thông tin sách cập nhật
-        return res.status(200).json({ message: 'Book updated successfully', book });
+        return res.status(200).json({ message: 'Cập nhật sách thành công!', book });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };
 
 // Lấy thông tin sách theo ID hoặc tất cả nếu không có ID, hỗ trợ phân trang
 exports.getBooks = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { page } = req.params; 
+        let { page = 1, pagesize = 10, keyword = "", type = "name" } = req.query;
 
-        // Nếu `id` tồn tại, tìm sách theo ID
-        if (id) {
-            const book = await Book.findByPk(id);
+        page = parseInt(page) || 1
+        pagesize = parseInt(pagesize) || 10
+        pagesize = pagesize > 25 ? 25 : pagesize
+        type = type || "name"
+        let where = { name: { [Op.iLike]: `%${keyword.trim()}%` } }
+        const condition = (t) => (keyword?.trim() && type === t) ? where : {}
 
-            if (!book) {
-                return res.status(404).json({ message: 'Book not found' });
-            }
+        let skip = (page - 1) * pagesize
+        let { count, rows } = await db.Book.findAndCountAll({
+            distinct: true,
+            where: condition("name"),
+            limit: pagesize,
+            offset: skip,
+            attributes: {
+                exclude: ['createdAt', 'updatedAt'],
+                include: [
+                    [
+                        literal(`(
+                        SELECT COUNT(*)
+                        FROM "BookReaders"
+                        WHERE "BookReaders"."isReturned" = false
+                        )`), "borrowCount"
+                    ]
+                ]
+            },
+            include: [
+                {
+                    model: db.Publisher,
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: db.Author,
+                    where: condition("author"),
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Position,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Tag,
+                    where: condition("tag"),
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.User,
+                    attributes: [],
+                    through: { attributes: [] },
+                },
+            ],
+        })
 
-            return res.status(200).json(book);
-        }
-
-        // Kiểm tra nếu có tham số `page`
-        if (page !== undefined) {
-            // Kiểm tra `page` có phải là số nguyên dương hay không
-            const pageNumber = parseInt(page, 10);
-            if (isNaN(pageNumber) || pageNumber <= 0) {
-                return res.status(404).json({ message: 'Not Found' });
-            }
-
-            // Phân trang
-            const pageSize = 10;
-            const offset = (pageNumber - 1) * pageSize;
-
-            // Truy vấn sách theo trang
-            const books = await Book.findAll({ offset, limit: pageSize });
-
-            if (books.length === 0) {
-                return res.status(404).json({ message: 'Not Found' });
-            }
-
-            return res.status(200).json(books);
-        }
-
-        // Nếu không có tham số `page`, trả về tất cả sách
-        const books = await Book.findAll();
-        return res.status(200).json(books);
+        return res.status(200).json({
+            message: "Get data successfully!",
+            result: rows,
+            pageCount: Math.ceil(count / pagesize)
+        })
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
+    }
+};
+
+exports.getBookById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const book = await db.Book.findByPk(id, {
+            attributes: {
+                exclude: ['createdAt', 'updatedAt'],
+                include: [
+                    [
+                        literal(`(
+                        SELECT COUNT(*)
+                        FROM "BookReaders"
+                        WHERE "BookReaders"."isReturned" = false
+                        )`), "borrowCount"
+                    ]
+                ]
+            },
+            include: [
+                {
+                    model: db.Publisher,
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: db.Author,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Position,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Tag,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.User,
+                    attributes: [],
+                    through: { attributes: [] },
+                },
+            ]
+        })
+
+        if (!book) {
+            return res.status(404).json({ message: 'Book not found' });
+        }
+
+        return res.status(200).json({
+            message: "Get data successfully!",
+            result: book
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Lỗi server!" });
+    }
+};
+
+exports.userGetBooks = async (req, res) => {
+    try {
+        let { page = 1, pagesize = 10, keyword = "", type = "name" } = req.query;
+
+        page = parseInt(page) || 1
+        pagesize = parseInt(pagesize) || 10
+        pagesize = pagesize > 25 ? 25 : pagesize
+        type = type || "name"
+        let where = { name: { [Op.iLike]: `%${keyword.trim()}%` } }
+        const condition = (t) => (keyword?.trim() && type === t) ? where : {}
+
+        let skip = (page - 1) * pagesize
+        let { count, rows } = await db.Book.findAndCountAll({
+            distinct: true,
+            where: condition("name"),
+            limit: pagesize,
+            offset: skip,
+            attributes: {
+                exclude: ['createdAt', 'updatedAt'],
+                include: [
+                    [
+                        literal(`(
+                        SELECT COUNT(*)
+                        FROM "BookReaders"
+                        WHERE "BookReaders"."isReturned" = false
+                        )`), "borrowCount"
+                    ]
+                ]
+            },
+            include: [
+                {
+                    model: db.Publisher,
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: db.Author,
+                    where: condition("author"),
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Position,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Tag,
+                    where: condition("tag"),
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.User,
+                    attributes: [],
+                    through: { attributes: [] },
+                },
+            ],
+        })
+
+        return res.status(200).json({
+            message: "Get data successfully!",
+            result: rows,
+            pageCount: Math.ceil(count / pagesize)
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Lỗi server!" });
+    }
+};
+
+exports.userGetBookById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const book = await db.Book.findByPk(id, {
+            attributes: {
+                exclude: ['createdAt', 'updatedAt'],
+                include: [
+                    [
+                        literal(`(
+                        SELECT COUNT(*)
+                        FROM "BookReaders"
+                        WHERE "BookReaders"."isReturned" = false
+                        )`), "borrowCount"
+                    ]
+                ]
+            },
+            include: [
+                {
+                    model: db.Publisher,
+                    attributes: ['id', 'name'],
+                },
+                {
+                    model: db.Author,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Position,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.Tag,
+                    attributes: ['id', 'name'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: db.User,
+                    attributes: [],
+                    through: { attributes: [] },
+                },
+            ]
+        })
+
+        if (!book) {
+            return res.status(404).json({ message: 'Book not found' });
+        }
+
+        return res.status(200).json({
+            message: "Get data successfully!",
+            result: book
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };

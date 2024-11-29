@@ -1,50 +1,50 @@
-const { Users, Book, BookReader, Publisher, Author, Tag } = require('../models');
+const db = require('../models');
 const { Op } = require('sequelize');
 
 const ReaderController = {
   // Xem danh sách sách đã mượn
   viewBorrowedBooks: async (req, res) => {
-    const { readerId } = req.params;
+    const user = req.user
+    if (!user) return res.status(500).json({ message: "Cần đăng nhập để thực hiện thao tác này!" })
+    let { page = 1, pagesize = 10 } = req.query;
 
+    page = parseInt(page) || 1
+    pagesize = parseInt(pagesize) || 10
+    pagesize = pagesize > 25 ? 25 : pagesize
+    let skip = (page - 1) * pagesize
     try {
-      const borrowedBooks = await BookReader.findAll({
-        where: { readerId, isReturned: false },
+      let { count, rows } = await db.BookReader.findAndCountAll({
+        where: { readerId: user.id },
+        distinct: true,
+        limit: pagesize,
+        offset: skip,
         include: [
-            {
-                model: Book,
-                attributes: ['name', 'image'],
-                include: [
-                    {
-                        model: Author,
-                        attributes: ['name'],
-                        through: { attributes: [] } 
-                    },
-                    {
-                        model: Tag,
-                        attributes: ['name'],
-                        through: { attributes: [] } 
-                    },
-                    {
-                        model: Publisher,
-                        attributes: ['name']
-                    }
-                ]
-            }
-        ]
-      });
-      res.status(200).json(borrowedBooks);
+          {
+            model: db.Book,
+            attributes: ['id', 'name'],
+          },
+        ],
+      })
+
+      return res.status(200).json({
+        message: "Get data successfully!",
+        result: rows,
+        pageCount: Math.ceil(count / pagesize)
+      })
     } catch (error) {
-      res.status(500).json({ message: 'Lỗi khi lấy danh sách sách đã mượn', error });
+      return res.status(500).json({ message: 'Lỗi khi lấy danh sách sách đã mượn', error });
     }
   },
 
   // Gia hạn sách
   renewBook: async (req, res) => {
-    const { readerId, bookId } = req.params;
+    const user = req.user
+    if (!user) return res.status(500).json({ message: "Cần đăng nhập để thực hiện thao tác này!" })
+    const { bookId } = req.body;
 
     try {
-      const bookReader = await BookReader.findOne({
-        where: { bookId, readerId, isReturned: false }
+      const bookReader = await db.BookReader.findOne({
+        where: { bookId, readerId: user.id, isReturned: false }
       });
 
       if (!bookReader) {
@@ -53,7 +53,7 @@ const ReaderController = {
 
       // Kiểm tra nếu sách đã đc gia hạn trước đó
       if (bookReader.isExtended) {
-        return res.status(400).json({ message: 'Không thể gia hạn thêm' });
+        return res.status(500).json({ message: 'Không thể gia hạn thêm' });
       }
 
       // Gia hạn sách thêm 7 ngày
@@ -63,9 +63,9 @@ const ReaderController = {
       bookReader.isExtended = true;
       await bookReader.save();
 
-      res.status(200).json({ message: 'Gia hạn sách thành công', bookReader });
+      return res.status(200).json({ message: 'Gia hạn sách thành công', bookReader });
     } catch (error) {
-      res.status(500).json({ message: 'Lỗi khi gia hạn sách', error });
+      return res.status(500).json({ message: 'Lỗi khi gia hạn sách', error });
     }
   },
 
@@ -74,7 +74,7 @@ const ReaderController = {
     const { bookName, authorName, publisherName } = req.query;
 
     try {
-      const books = await Book.findAll({
+      const books = await db.Book.findAll({
         where: {
           ...(bookName && { name: { [Op.iLike]: `%${bookName}%` } })
         },
@@ -93,9 +93,9 @@ const ReaderController = {
         ]
       });
 
-      res.status(200).json(books);
+      return res.status(200).json(books);
     } catch (error) {
-      res.status(500).json({ message: 'Lỗi khi tìm kiếm sách', error });
+      return res.status(500).json({ message: 'Lỗi khi tìm kiếm sách', error });
     }
   }
 };

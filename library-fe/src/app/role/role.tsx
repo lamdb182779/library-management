@@ -18,10 +18,7 @@ export default function Role({
 
     const changeRole = async (item: number) => {
         const update = await trigger({ role: item })
-        console.log(update);
-
-        if (update.message === "Update user successfully!") mutate()
-
+        if (update) mutate()
     }
 
     const roles = ["Admin", "Thủ thư", "Người đọc"]

@@ -10,7 +10,7 @@ module.exports = {
           model: 'Books',
           key: 'id'
         },
-        onDelete: 'CASCADE' // Khi xóa sách thì xóa luôn BookAuthor
+        onDelete: 'CASCADE'
       },
       readerId: {
         type: Sequelize.STRING,
@@ -45,7 +45,7 @@ module.exports = {
       },
     });
     await queryInterface.addConstraint('BookReaders', {
-      fields: ['bookId', 'readerId'],
+      fields: ['bookId', 'readerId', 'startedDate'],
       type: 'primary key',
       name: 'pk_book_reader'
     });

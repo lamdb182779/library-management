@@ -25,7 +25,6 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'BookAuthor',
-    timestamps: false // Có thể tắt timestamps nếu không cần
   });
   return BookAuthor;
 };

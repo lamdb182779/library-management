@@ -3,13 +3,17 @@ const ReaderController = require('../controllers/readerController');
 
 const router = express.Router();
 
-// Xem danh sách sách đã mượn
-router.get('/:readerId/borrowed-books', ReaderController.viewBorrowedBooks);
+const self = (route) => {
 
-// Gia hạn sách
-router.post('/:readerId/renew/:bookId', ReaderController.renewBook);
+    // Xem danh sách sách đã mượn
+    router.get('/borrowed', ReaderController.viewBorrowedBooks);
 
-// Tra cứu sách
-router.get('/search-books', ReaderController.searchBooks);
+    // Gia hạn sách
+    router.put('/renew', ReaderController.renewBook);
 
-module.exports = router;
+    // Tra cứu sách
+    router.get('/search-books', ReaderController.searchBooks);
+    return route.use("/", router)
+}
+
+module.exports = self;

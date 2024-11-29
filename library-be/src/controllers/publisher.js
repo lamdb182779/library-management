@@ -1,4 +1,5 @@
-const Publisher = require('../models/publisher');
+const db = require('../models');
+const { Op } = require("sequelize")
 
 // Thêm nhà xuất bản mới
 exports.addPublisher = async (req, res) => {
@@ -6,28 +7,19 @@ exports.addPublisher = async (req, res) => {
         // Kiểm tra xem name có được cung cấp và hợp lệ hay không
         if (!req.body.name || typeof req.body.name !== 'string' || req.body.name.trim() === '') {
             console.log('Publisher name must be a valid');
-            return res.status(400).json({ message: 'Publisher name must be a valid' });
+            return res.status(400).json({ message: 'Tên nhà xuất bản không đúng định dạng!' });
         }
 
-        const { id, name } = req.body;
+        const { name } = req.body;
 
-        // Nếu `id` được cung cấp, kiểm tra xem nó có tồn tại trong bảng Publishers hay chưa
-        if (id) {
-            const existingPublisher = await Publisher.findByPk(id);
-            if (existingPublisher) {
-                return res.status(400).json({ message: 'Publisher with the given ID already exists' });
-            }
-        }
-
-        const newPublisher = await Publisher.create({
-            id: id || undefined, // Nếu `id` là null sẽ tự tạo UUID
+        const newPublisher = await db.Publisher.create({
             name
         });
 
         return res.status(201).json({ message: 'Publisher created successfully', publisher: newPublisher });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };
 
@@ -37,19 +29,19 @@ exports.deletePublisher = async (req, res) => {
         const { id } = req.params;
 
         // Kiểm tra xem nhà xuất bản với `id` có tồn tại không
-        const publisher = await Publisher.findByPk(id);
-        
+        const publisher = await db.Publisher.findByPk(id);
+
         if (!publisher) {
             return res.status(404).json({ message: 'Publisher not found' });
         }
 
         // Xóa nhà xuất bản
         await publisher.destroy();
-        
+
         return res.status(200).json({ message: 'Publisher deleted successfully' });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };
 
@@ -60,15 +52,15 @@ exports.updatePublisher = async (req, res) => {
         const { name } = req.body;
 
         // Kiểm tra xem nhà xuất bản với `id` có tồn tại không
-        const publisher = await Publisher.findByPk(id);
-        
+        const publisher = await db.Publisher.findByPk(id);
+
         if (!publisher) {
-            return res.status(404).json({ message: 'Publisher not found' });
+            return res.status(404).json({ message: 'Không tìm thấy nhà xuất bản' });
         }
 
         // Kiểm tra tính hợp lệ của tên nếu có
         if (name && (typeof name !== 'string' || name.trim() === '')) {
-            return res.status(400).json({ message: 'Publisher name must be a valid, non-empty string' });
+            return res.status(400).json({ message: 'Tên nhà xuất bản không đúng định dạng!' });
         }
 
         // Cập nhật thông tin mới cho nhà xuất bản
@@ -80,31 +72,54 @@ exports.updatePublisher = async (req, res) => {
         return res.status(200).json({ message: 'Publisher updated successfully', publisher });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };
 
 // Lấy thông tin nhà xuất bản theo ID hoặc tất cả nếu không có ID
-exports.getPublisher = async (req, res) => {
+exports.getPublishers = async (req, res) => {
+    try {
+        let { page = 1, pagesize = 10, keyword = "" } = req.query;
+
+        page = parseInt(page) || 1
+        pagesize = parseInt(pagesize) || 10
+        pagesize = pagesize > 50 ? 50 : pagesize
+
+        let skip = (page - 1) * pagesize
+        let { count, rows } = await db.Publisher.findAndCountAll({
+            where: keyword?.trim() ? { name: { [Op.iLike]: `%${keyword.trim()}%` } } : {},
+            limit: pagesize,
+            offset: skip,
+            attributes: ["id", "name"]
+        })
+
+        return res.status(200).json({
+            message: "Get data successfully!",
+            result: rows,
+            pageCount: Math.ceil(count / pagesize)
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Lỗi server!" });
+    }
+};
+
+exports.getPublisherById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Nếu `id` tồn tại, tìm nhà xuất bản theo ID
-        if (id) {
-            const publisher = await Publisher.findByPk(id);
+        const publisher = await db.Publisher.findByPk(id);
 
-            if (!publisher) {
-                return res.status(404).json({ message: 'Publisher not found' });
-            }
+        if (!publisher) {
+            return res.status(404).json({ message: 'Publisher not found' });
+        }
 
-            return res.status(200).json(publisher);
-        } 
-
-        // Nếu không có `id`, trả về tất cả nhà xuất bản
-        const publishers = await Publisher.findAll();
-        return res.status(200).json(publishers);
+        return res.status(200).json({
+            message: "Get data successfully!",
+            result: publisher
+        });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: "Lỗi server!" });
     }
 };

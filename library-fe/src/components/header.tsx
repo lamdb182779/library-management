@@ -15,6 +15,8 @@ import { LucideLogOut, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { MouseEvent, useEffect } from "react"
 import { Button } from "./ui/button"
+import { toast } from "@/hooks/use-toast"
+
 
 export default function Header() {
     const globals = ["/", "/search"]
@@ -35,6 +37,19 @@ export default function Header() {
                 handleLogin()
             }
         }
+        if (data?.message === "Logged in!") {
+            if (
+                (["/loan", "/lend", "/book", "/author"].includes(path) && ![1, 2].includes(data?.user?.role))
+                || (path === "/role" && data?.user?.role !== 1)
+            ) {
+                setTimeout(() =>
+                    router.back(), 500)
+                toast({
+                    variant: "destructive",
+                    description: "Bạn không có quyền truy cập này!"
+                })
+            }
+        }
     }, [isLoading])
 
     const handleLogin = () => {
@@ -42,8 +57,13 @@ export default function Header() {
     }
     const handleLogout = () => {
         logout().then((success) => {
-            if (success) router.push("/")
-            mutate()
+            if (success) {
+                router.push("/")
+                mutate()
+                toast({
+                    description: "Đăng xuất thành công",
+                })
+            }
         })
     }
 
@@ -69,39 +89,17 @@ export default function Header() {
                     name: "Cho muợn sách",
                     route: "/lend"
                 },
-                {
-                    name: "Nhận lại sách",
-                    route: "/return"
-                }
             ]
         },
         {
-            name: "Quản lý sách",
+            name: "Tất cả đầu sách",
             permission: [1, 2],
-            action: [
-                {
-                    name: "Tất cả đầu sách",
-                    route: "/book",
-                },
-                {
-                    name: "Nhập đầu sách mới",
-                    route: "/book/add"
-                },
-            ]
+            route: "/book",
         },
         {
-            name: "Quản lý tác giả",
+            name: "Danh sách tác giả",
             permission: [1, 2],
-            action: [
-                {
-                    name: "Tất cả tác giả",
-                    route: "/author",
-                },
-                {
-                    name: "Thêm tác giả mới",
-                    route: "/author/add"
-                },
-            ]
+            route: "/author",
         },
         {
             name: "Phân quyền",
@@ -111,7 +109,7 @@ export default function Header() {
     ]
 
     return (
-        <div className="fixed z-[60] w-screen h-[8vh] flex items-center justify-between px-20 text-sm">
+        <div className="fixed z-[60] w-screen h-[8vh] flex items-center justify-between px-20 text-sm bg-background shadow-sm dark:shadow-white">
             <Menubar className="border-none shadow-none">
                 {navList.map((nav: any) => {
                     if (nav.permission?.includes(data?.user?.role) || !nav.permission) {

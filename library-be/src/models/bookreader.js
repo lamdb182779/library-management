@@ -11,6 +11,8 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      this.belongsTo(models.Book, { foreignKey: 'bookId' });
+      this.belongsTo(models.User, { foreignKey: 'readerId' });
     }
   }
   BookReader.init({
@@ -22,12 +24,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       primaryKey: true
     },
-    startedDate: DataTypes.DATE,
+    startedDate: {
+      type: DataTypes.DATE,
+      primaryKey: true
+    },
     expiredDate: DataTypes.DATE,
     isExtended: DataTypes.BOOLEAN,
     isReturned: DataTypes.BOOLEAN,
     returnedDate: DataTypes.DATE
   }, {
+    timestamps: false,
     sequelize,
     modelName: 'BookReader',
     hooks: {
