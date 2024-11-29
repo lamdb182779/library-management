@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast"
 
 
 export default function Header() {
-    const globals = ["/", "/search"]
+    const globals = ["/", "/search", '/test']
 
     const { theme, setTheme } = useTheme()
 
