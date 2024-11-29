@@ -9,6 +9,8 @@ const route = require("./routes/route.js")
 const { conn } = require("./config/connect.js")
 const loginWithGoogle = require("./controllers/google.js")
 const sess = require("./config/session.js")
+const cron = require("node-cron")
+const { mailSchedule } = require("./controllers/schedule.js")
 
 app.use(cors({
     credentials: true,
@@ -26,6 +28,10 @@ route(app)
 loginWithGoogle()
 
 conn()
+
+cron.schedule("0 9 * * *", () => {
+    mailSchedule()
+})
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
