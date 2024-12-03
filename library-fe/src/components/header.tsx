@@ -58,7 +58,7 @@ export default function Header() {
     const handleLogout = () => {
         logout().then((success) => {
             if (success) {
-                router.push("/")
+                router.push("/search")
                 mutate()
                 toast({
                     description: "Đăng xuất thành công",

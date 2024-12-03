@@ -7,7 +7,8 @@ import { useState } from "react"
 import PaginationC from "@/components/pagination"
 import Loader from "@/components/loader"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; import {
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -168,26 +169,27 @@ export default function Home() {
                                                     }
                                                 </TableCell>
                                                 <TableCell className="text-center">{item.returnedDate && format(new Date(item.returnedDate), "dd/MM/yyyy")}</TableCell>
-                                                <TableCell className="text-center"><AlertDialog>
-                                                    <AlertDialogTrigger>
-                                                        <Button disabled={mutateDelete} variant="outline" size="sm">
-                                                            Xóa
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Bạn có chắc muốn xóa không?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                Hành động này sẽ không thể hoàn tác. Dữ liệu sẽ bị xóa hoàn toàn.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Từ bỏ</AlertDialogCancel>
-                                                            <AlertDialogAction
-                                                                onClick={() => handleDelete(item.User.id, item.Book.id, item.startedDate)}>Tiếp tục</AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
+                                                <TableCell className="text-center">
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger>
+                                                            <Button disabled={mutateDelete} variant="outline" size="sm">
+                                                                Xóa
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Bạn có chắc muốn xóa không?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    Hành động này sẽ không thể hoàn tác. Dữ liệu sẽ bị xóa hoàn toàn.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Từ bỏ</AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    onClick={() => handleDelete(item.User.id, item.Book.id, item.startedDate)}>Tiếp tục</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
