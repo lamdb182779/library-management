@@ -49,7 +49,7 @@ export function AuthorSelect({
                                 {data?.result?.length > 0 ?
                                     <>
                                         {data.result.map((item: any) => {
-                                            if (!authors.includes(item)) return <div
+                                            if (!authors.map(author => author.id).includes(item.id)) return <div
                                                 onClick={() => setAuthors((pre: any) => [...pre, item])}
                                                 className="cursor-pointer select-none rounded-md p-2 text-sm dark:text-white hover dark:hover:bg-neutral-900 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                                 key={item.id} >
