@@ -22,7 +22,7 @@ const sendEmail = async (email, book, date) => {
             to: email,
             subject: 'Sắp đến hạn trả sách',
             text: `Bạn có hạn trả cuốn sách "${book} vào ngày ${format(new Date(date), "dd/MM/yyyy")}"`,
-            html: `<b>Bạn có hạn trả cuốn sách "${book} vào ngày ${format(new Date(date), "dd/MM/yyyy")}"</b>`,
+            html: `<b>Bạn có hạn trả cuốn sách "${book}" vào ngày ${format(new Date(date), "dd/MM/yyyy")}</b>`,
         });
 
         console.log('Email sent: %s', info.messageId);
@@ -57,6 +57,6 @@ exports.mailSchedule = async () => {
     });
 
     bookReaders.forEach(bookReader => {
-        sendEmail(bookReader.email, bookReader.Book.name || "", bookReader.expiredDate)
+        sendEmail(bookReader.User.email, bookReader.Book.name || "", bookReader.expiredDate)
     });
 }

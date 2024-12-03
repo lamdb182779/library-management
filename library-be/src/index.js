@@ -29,7 +29,7 @@ loginWithGoogle()
 
 conn()
 
-cron.schedule("0 9 * * *", () => {
+cron.schedule("35 9 * * *", () => {
     mailSchedule()
 })
 

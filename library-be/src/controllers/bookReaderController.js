@@ -60,18 +60,39 @@ const bookReaderController = {
 
   getLoans: async (req, res) => {
     try {
-      let { page = 1, pagesize = 10, keyword = "", type = "book" } = req.query;
+      let { page = 1, pagesize = 10, keyword = "", type = "book", filter } = req.query;
 
       page = parseInt(page) || 1
       pagesize = parseInt(pagesize) || 10
       pagesize = pagesize > 25 ? 25 : pagesize
       type = type || "book"
       let where = { name: { [Op.iLike]: `%${keyword.trim()}%` } }
+      let find = {}
+      switch (filter) {
+        case "returned": {
+          find = { isReturned: true }
+          break
+        }
+        case "borrowing": {
+          find = { isReturned: false }
+          break
+        }
+        case "expired": {
+          find = { isReturned: false, expiredDate: { [Op.lt]: new Date() } }
+          break
+        }
+        default: {
+          find = {}
+          break
+        }
+      }
+
       const condition = (t) => (keyword?.trim() && type === t) ? where : {}
 
       let skip = (page - 1) * pagesize
       let { count, rows } = await db.BookReader.findAndCountAll({
         distinct: true,
+        where: find,
         limit: pagesize,
         offset: skip,
         include: [
@@ -87,6 +108,7 @@ const bookReaderController = {
           },
         ],
       })
+
 
       return res.status(200).json({
         message: "Get data successfully!",

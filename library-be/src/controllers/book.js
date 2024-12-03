@@ -236,6 +236,7 @@ exports.getBooks = async (req, res) => {
                         SELECT COUNT(*)
                         FROM "BookReaders"
                         WHERE "BookReaders"."isReturned" = false
+                        AND "BookReaders"."bookId" = "Book"."id"
                         )`), "borrowCount"
                     ]
                 ]
@@ -294,6 +295,7 @@ exports.getBookById = async (req, res) => {
                         SELECT COUNT(*)
                         FROM "BookReaders"
                         WHERE "BookReaders"."isReturned" = false
+                        AND "BookReaders"."bookId" = "Book"."id"
                         )`), "borrowCount"
                     ]
                 ]
