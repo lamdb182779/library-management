@@ -48,6 +48,16 @@ export const poster = async (path: string, { arg }: { arg: object }) => axiosIns
         })
     })
 
+export const posterNoCookie = async (path: string, { arg }: { arg: object }) => axiosInstance.post(path, arg)
+    .then(res => {
+        return res.data
+    }).catch(error => {
+        toast({
+            description: error?.response?.data?.message || "Thêm mới thất bại",
+            variant: "destructive"
+        })
+    })
+
 export const deleter = async (path: string, { arg }: { arg: object }) => axiosInstance.delete(path, {
     data: arg,
     withCredentials: true

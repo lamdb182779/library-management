@@ -10,6 +10,11 @@ import { PenSquare } from "lucide-react"
 import { Label } from "@/components/ui/label";
 import { updater } from "@/service/fetch";
 import useSWRMutation from "swr/mutation";
+import Image from "next/image";
+import ImageUpload from "@/components/image-upload";
+import light from "@/assets/unknown-light.png"
+import dark from "@/assets/unknown-dark.png"
+import { useTheme } from "next-themes";
 
 export function Update({
     author, mutate
@@ -24,13 +29,17 @@ export function Update({
 }) {
     const [name, setName] = useState(author.name);
     const [describe, setDescribe] = useState(author.describe);
+    const [imageUrl, setImageUrl] = useState("")
 
     const { trigger, isMutating } = useSWRMutation(`/author/${author.id}`, updater)
+
+    const { theme } = useTheme()
 
     const handleSubmit = async () => {
         const post = await trigger({
             name: name,
-            describe: describe
+            describe: describe,
+            image: imageUrl || undefined
         })
         if (post) {
             mutate()
@@ -55,6 +64,17 @@ export function Update({
             </TooltipProvider>
             <DialogContent>
                 <DialogHeader className="md:text-center font-semibold">Sửa thông tin</DialogHeader>
+                <div className="w-full justify-center flex">
+                    <ImageUpload folder="author_images" imageUrl={imageUrl} setImageUrl={setImageUrl}>
+                        <div className="w-[160px] h-[160px] relative">
+                            <Image
+                                className="object-cover rounded-full"
+                                fill
+                                src={imageUrl || author.image || (theme === "dark" ? dark : light)}
+                                alt={"image"} />
+                        </div>
+                    </ImageUpload>
+                </div>
                 <div className="space-y-2">
                     <Label htmlFor="name">Tên tác giả</Label>
                     <Input
@@ -77,6 +97,6 @@ export function Update({
                     <Button disabled={isMutating} onClick={() => handleSubmit()}>Thay đổi</Button>
                 </DialogFooter>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

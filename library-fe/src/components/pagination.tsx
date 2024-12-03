@@ -141,13 +141,17 @@ export default function PaginationC({
     return (
         <Pagination>
             <PaginationContent>
-                <PaginationItem className="cursor-pointer" onClick={() => page > 1 && handlePage(page - 1)}>
-                    <PaginationPrevious />
-                </PaginationItem>
+                {page > 1 &&
+                    <PaginationItem className="cursor-pointer" onClick={() => page > 1 && handlePage(page - 1)}>
+                        <PaginationPrevious />
+                    </PaginationItem>
+                }
                 <PageList />
-                <PaginationItem className="cursor-pointer" onClick={() => page < length && handlePage(page + 1)}>
-                    <PaginationNext />
-                </PaginationItem>
+                {page < length &&
+                    <PaginationItem className="cursor-pointer" onClick={() => page < length && handlePage(page + 1)}>
+                        <PaginationNext />
+                    </PaginationItem>
+                }
             </PaginationContent>
         </Pagination>
 

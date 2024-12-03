@@ -14,6 +14,11 @@ import { PublisherSelect } from "./publisher-select";
 import { AuthorSelect } from "./author-select";
 import { TagSelect } from "./tag-select";
 import { PositionSelect } from "./position-select";
+import ImageUpload from "@/components/image-upload";
+import Image from "next/image";
+import light from "@/assets/book-light.png"
+import dark from "@/assets/book-dark.png"
+import { useTheme } from "next-themes";
 
 export function AddNew({
     mutate
@@ -27,39 +32,10 @@ export function AddNew({
     const [tags, setTags] = useState<any[]>([])
     const [positions, setPositions] = useState<any[]>([])
     const [quantity, setQuantity] = useState(1);
-    const [coverImage, setCoverImage] = useState<string | null>(null); // URL ảnh bìa
-    const [uploading, setUploading] = useState(false); // Trạng thái upload ảnh
-
+    const [imageUrl, setImageUrl] = useState("")
 
     const { trigger, isMutating } = useSWRMutation(`/book`, poster)
-
-    const handleUpload = async (file: File) => {
-        if (!file) return;
-
-        setUploading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "qldtapp");
-        formData.append("folder", "book_covers");
-
-        const CLOUDINARY_CLOUD_NAME = "dnhhpdwnh";
-
-        try {
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error("Upload thất bại");
-
-            const data = await response.json();
-            setCoverImage(data.secure_url); // URL ảnh bìa
-        } catch (error) {
-            console.error("Lỗi khi upload ảnh:", error);
-        } finally {
-            setUploading(false);
-        }
-    };
+    const { theme } = useTheme()
 
     const handleSubmit = async () => {
         const postData = {
@@ -70,7 +46,7 @@ export function AddNew({
             tagIds: tags.map(tag => tag.id),
             positionIds: positions.map(position => position.id),
             quantity,
-            image: coverImage,
+            image: imageUrl || undefined,
         };
 
         const post = await trigger(postData);
@@ -84,7 +60,7 @@ export function AddNew({
             setTags([]);
             setPositions([]);
             setQuantity(1);
-            setCoverImage(null);
+            setImageUrl("")
         }
     };
 
@@ -104,8 +80,19 @@ export function AddNew({
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <DialogContent>
+            <DialogContent className="scale-90">
                 <DialogHeader className="md:text-center font-semibold">Thêm sách</DialogHeader>
+                <div className="w-full justify-center flex">
+                    <ImageUpload folder="book-covers" imageUrl={imageUrl} setImageUrl={setImageUrl}>
+                        <div className="w-[70px] h-[85px] relative">
+                            <Image
+                                className="object-cover rounded"
+                                fill
+                                src={imageUrl || (theme === "dark" ? dark : light)}
+                                alt={"image"} />
+                        </div>
+                    </ImageUpload>
+                </div>
                 <div className="space-y-2">
                     <Label htmlFor="name">Tên sách</Label>
                     <Input
@@ -123,22 +110,6 @@ export function AddNew({
                         value={describe}
                         onChange={(e) => setDescribe(e.target.value)}
                     />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="coverImage">Ảnh bìa</Label>
-                    <Input
-                        id="coverImage"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleUpload(e.target.files?.[0] as File)}
-                        disabled={uploading}
-                    />
-                    {coverImage && (
-                        <div className="mt-2">
-                            <img src={coverImage} alt="Book Cover" className="w-32 h-48 object-cover rounded-md" />
-                        </div>
-                    )}
-                    {uploading && <p>Đang tải ảnh lên...</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="publisher">Nhà xuất bản</Label>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams, usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 import GoogleIcon from "./svg/google"
 import Image from 'next/image'
@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast"
 
 
 export default function Header() {
-    const globals = ["/", "/search", '/test']
+    const globals = ["/search"]
 
     const { theme, setTheme } = useTheme()
 

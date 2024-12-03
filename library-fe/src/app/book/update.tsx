@@ -14,6 +14,11 @@ import { PublisherSelect } from "./publisher-select";
 import { AuthorSelect } from "./author-select";
 import { TagSelect } from "./tag-select";
 import { PositionSelect } from "./position-select";
+import ImageUpload from "@/components/image-upload";
+import light from "@/assets/book-light.png"
+import dark from "@/assets/book-dark.png"
+import { useTheme } from "next-themes";
+import Image from "next/image";
 
 export function Update({
     mutate,
@@ -39,8 +44,11 @@ export function Update({
     const [tags, setTags] = useState<any[]>(book.Tags)
     const [positions, setPositions] = useState<any[]>(book.Positions)
     const [quantity, setQuantity] = useState(book.quantity);
+    const [imageUrl, setImageUrl] = useState("")
 
     const { trigger, isMutating } = useSWRMutation(`/book/${book.id}`, updater)
+
+    const { theme } = useTheme()
 
     const handleSubmit = async () => {
         const update = await trigger({
@@ -51,6 +59,7 @@ export function Update({
             tagIds: tags.map(tag => tag.id),
             positionIds: positions.map(position => position.id),
             quantity,
+            image: imageUrl
         });
         if (update) {
             mutate();
@@ -73,8 +82,19 @@ export function Update({
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <DialogContent>
+            <DialogContent className="scale-90">
                 <DialogHeader className="md:text-center font-semibold">Thêm sách</DialogHeader>
+                <div className="w-full justify-center flex">
+                    <ImageUpload folder="book-covers" imageUrl={imageUrl} setImageUrl={setImageUrl}>
+                        <div className="w-[70px] h-[85px] relative">
+                            <Image
+                                className="object-cover rounded"
+                                fill
+                                src={imageUrl || book.image || (theme === "dark" ? dark : light)}
+                                alt={"image"} />
+                        </div>
+                    </ImageUpload>
+                </div>
                 <div className="space-y-2">
                     <Label htmlFor="name">Tên sách</Label>
                     <Input
