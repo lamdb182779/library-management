@@ -51,7 +51,7 @@ export default function Home() {
     const [duration, setDuration] = useState(7)
 
     const { data: usersData } = useSWR(`/user?keyword=${userSearch}&types=name&page=${userPage}`, fetcher)
-    const { data: booksData } = useSWR(`/book?keyword=${bookSearch}&type=name&pagesize=5&page=${bookPage}`, fetcher)
+    const { data: booksData, mutate } = useSWR(`/book?keyword=${bookSearch}&type=name&pagesize=5&page=${bookPage}`, fetcher)
     const { trigger, isMutating } = useSWRMutation("/loan", poster)
 
 
@@ -66,13 +66,16 @@ export default function Home() {
         setBookSearch(keyword?.value)
     };
 
-    const handleSubmit = () => {
-        trigger({
+    const handleSubmit = async () => {
+        const post = await trigger({
             startedDate: date,
             readerId: userInfo?.id,
             bookId: bookInfo?.id,
             duration
         })
+        if (post) {
+            mutate()
+        }
     };
 
     return (
@@ -151,7 +154,7 @@ export default function Home() {
                                     <TableRow key={book.id}>
                                         <TableCell>{book.name}</TableCell>
                                         <TableCell>{book.Authors.map((item: any) => item.name).join(", ")}</TableCell>
-                                        <TableCell>{book.quantity - book.Users?.length}</TableCell>
+                                        <TableCell>{book.quantity - book.borrowCount}</TableCell>
                                         <TableCell>
                                             <Button
                                                 onClick={() => setBookInfo(book)}

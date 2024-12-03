@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast"
 
 
 export default function Header() {
-    const globals = ["/", "/search"]
+    const globals = ["/", "/search", '/test']
 
     const { theme, setTheme } = useTheme()
 
@@ -58,7 +58,7 @@ export default function Header() {
     const handleLogout = () => {
         logout().then((success) => {
             if (success) {
-                router.push("/")
+                router.push("/search")
                 mutate()
                 toast({
                     description: "Đăng xuất thành công",

@@ -68,8 +68,8 @@ export default function Home() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {data.result.map((item: any, index: number) => (
-                                            <TableRow key={item.bookId + item.readerId + index}>
+                                        {data.result.map((item: any) => (
+                                            <TableRow key={item.bookId + item.readerId + format(item.startedDate, "dd/MM/yyyy")}>
                                                 <TableCell className="text-center">{item.Book.name}</TableCell>
                                                 <TableCell className="text-center">{format(new Date(item.startedDate), "dd/MM/yyyy")}</TableCell>
                                                 <TableCell className={`text-center ${(startOfDay(new Date()) > startOfDay(new Date(item.expiredDate)) && !item.isReturned) && "text-red-500"}`}>{format(new Date(item.expiredDate), "dd/MM/yyyy")}</TableCell>

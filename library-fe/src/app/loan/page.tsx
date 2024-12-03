@@ -7,7 +7,8 @@ import { useState } from "react"
 import PaginationC from "@/components/pagination"
 import Loader from "@/components/loader"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; import {
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -23,17 +24,27 @@ import { Button } from "@/components/ui/button"
 import { format, startOfDay } from "date-fns"
 import useSWRMutation from "swr/mutation"
 import { useSearchParams } from "next/navigation"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export default function Home() {
     const searchParams = useSearchParams()
     const [page, setPage] = useState(1)
     const [keyword, setKeyword] = useState(searchParams?.get("book") || "")
     const [type, setType] = useState("book")
-    const [select, setSelect] = useState("book")
+    const [radio, setRadio] = useState("book")
+    const [filter, setFilter] = useState("borrowing")
 
     const { data, mutate, isLoading } = useSWR(
-        `/loan?page=${page}&keyword=${keyword}&type=${type}`,
-        fetcher
+        `/loan?page=${page}&keyword=${keyword}&type=${type}&filter=${filter}`,
+        fetcher,
     )
 
     const { trigger, isMutating } = useSWRMutation("/loan", updater)
@@ -55,7 +66,7 @@ export default function Home() {
     const handleSearch = () => {
         const keyword = document.querySelector('input[type="text"]#loan-search') as HTMLInputElement
         setKeyword(keyword?.value)
-        setType(select)
+        setType(radio)
     }
 
     const handleDelete = async (readerId: string, bookId: string, startedDate: Date) => {
@@ -74,14 +85,30 @@ export default function Home() {
                 <div className="w-full flex gap-5 justify-center">
                     <div className="w-1/2 gap-3 flex flex-col">
                         <Input defaultValue={searchParams?.get("book") || ""} id="loan-search" className="" type="text" placeholder="Nhập từ khóa" />
-                        <RadioGroup className="text-sm flex gap-20 ms-[0.1rem]" value={select} onValueChange={setSelect}>
-                            <div className="flex gap-2">
-                                <RadioGroupItem value="book" /> Sách
-                            </div>
-                            <div className="flex gap-2">
-                                <RadioGroupItem value="reader" /> Người mượn
-                            </div>
-                        </RadioGroup>
+                        <div className="flex justify-between items-center">
+                            <RadioGroup className="text-sm flex gap-20 ms-[0.1rem]" value={radio} onValueChange={setRadio}>
+                                <div className="flex gap-2">
+                                    <RadioGroupItem value="book" /> Sách
+                                </div>
+                                <div className="flex gap-2">
+                                    <RadioGroupItem value="reader" /> Người mượn
+                                </div>
+                            </RadioGroup>
+                            <Select value={filter} onValueChange={setFilter}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>Lọc theo</SelectLabel>
+                                        <SelectItem value="all">Tất cả</SelectItem>
+                                        <SelectItem value="returned">Đã trả</SelectItem>
+                                        <SelectItem value="borrowing">Chưa trả</SelectItem>
+                                        <SelectItem value="expired">Quá hạn</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <Button variant={"outline"} onClick={() => handleSearch()}>Tìm kiếm</Button>
                 </div>
@@ -104,14 +131,13 @@ export default function Home() {
                                     </TableHeader>
                                     <TableBody>
                                         {data.result.map((item: any) => (
-                                            <TableRow key={item.bookId + item.readerId}>
+                                            <TableRow key={item.bookId + item.readerId + format(item.startedDate, "dd/MM/yyyy")}>
                                                 <TableCell className="text-center">{item.User.name}</TableCell>
                                                 <TableCell className="text-center">{item.Book.name}</TableCell>
                                                 <TableCell className="text-center">{format(new Date(item.startedDate), "dd/MM/yyyy")}</TableCell>
                                                 <TableCell className={`text-center ${(startOfDay(new Date()) > startOfDay(new Date(item.expiredDate)) && !item.isReturned) && "text-red-500"}`}>{format(new Date(item.expiredDate), "dd/MM/yyyy")}</TableCell>
                                                 <TableCell className="px-0">
                                                     {item.isReturned ?
-
                                                         <AlertDialog>
                                                             <AlertDialogTrigger
                                                                 className="ms-[50%] -translate-x-1/2">
@@ -143,26 +169,27 @@ export default function Home() {
                                                     }
                                                 </TableCell>
                                                 <TableCell className="text-center">{item.returnedDate && format(new Date(item.returnedDate), "dd/MM/yyyy")}</TableCell>
-                                                <TableCell className="text-center"><AlertDialog>
-                                                    <AlertDialogTrigger>
-                                                        <Button disabled={mutateDelete} variant="outline" size="sm">
-                                                            Xóa
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Bạn có chắc muốn xóa không?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                Hành động này sẽ không thể hoàn tác. Dữ liệu sẽ bị xóa hoàn toàn.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Từ bỏ</AlertDialogCancel>
-                                                            <AlertDialogAction
-                                                                onClick={() => handleDelete(item.User.id, item.Book.id, item.startedDate)}>Tiếp tục</AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
+                                                <TableCell className="text-center">
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger>
+                                                            <Button disabled={mutateDelete} variant="outline" size="sm">
+                                                                Xóa
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Bạn có chắc muốn xóa không?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    Hành động này sẽ không thể hoàn tác. Dữ liệu sẽ bị xóa hoàn toàn.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Từ bỏ</AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    onClick={() => handleDelete(item.User.id, item.Book.id, item.startedDate)}>Tiếp tục</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

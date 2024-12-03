@@ -55,7 +55,7 @@ exports.addBook = async (req, res) => {
             })
         }
 
-        return res.status(201).json({ message: 'Book created successfully', book: newBook });
+        return res.status(201).json({ message: 'Thêm mới sách thành công', book: newBook });
     } catch (error) {
         console.log(error);
         return res.status(500).json({ message: "Lỗi server!" });
@@ -236,6 +236,7 @@ exports.getBooks = async (req, res) => {
                         SELECT COUNT(*)
                         FROM "BookReaders"
                         WHERE "BookReaders"."isReturned" = false
+                        AND "BookReaders"."bookId" = "Book"."id"
                         )`), "borrowCount"
                     ]
                 ]
@@ -294,6 +295,7 @@ exports.getBookById = async (req, res) => {
                         SELECT COUNT(*)
                         FROM "BookReaders"
                         WHERE "BookReaders"."isReturned" = false
+                        AND "BookReaders"."bookId" = "Book"."id"
                         )`), "borrowCount"
                     ]
                 ]
