@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { poster } from "@/service/fetch";
 import useSWRMutation from "swr/mutation";
 
+
+
 export function AddNew({
     mutate
 }: {
@@ -18,18 +20,51 @@ export function AddNew({
 }) {
     const [name, setName] = useState("");
     const [describe, setDescribe] = useState("");
+    const [authorImage, setAuthorImage] = useState<string | null>(null);
+    const [uploadingAuthorImage, setUploadingAuthorImage] = useState(false); // Trạng thái upload ảnh tác giả
+
 
     const { trigger, isMutating } = useSWRMutation(`/author`, poster)
+
+    const handleAuthorImageUpload = async (file: File) => {
+        if (!file) return;
+    
+        setUploadingAuthorImage(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "qldtapp");
+        formData.append("folder", "author_images");
+    
+        const CLOUDINARY_CLOUD_NAME = "dnhhpdwnh";
+    
+        try {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: "POST",
+                body: formData,
+            });
+    
+            if (!response.ok) throw new Error("Upload thất bại");
+    
+            const data = await response.json();
+            setAuthorImage(data.secure_url); // URL ảnh tác giả
+        } catch (error) {
+            console.error("Lỗi khi upload ảnh tác giả:", error);
+        } finally {
+            setUploadingAuthorImage(false);
+        }
+    };
 
     const handleSubmit = async () => {
         const post = await trigger({
             name: name,
-            describe: describe
+            describe: describe,
+            image: authorImage,
         })
         if (post) {
-            mutate()
-            setName("")
-            setDescribe("")
+            mutate();
+            setName("");
+            setDescribe("");
+            setAuthorImage(null);
         }
     };
 
@@ -60,6 +95,23 @@ export function AddNew({
                         onChange={(e) => setName(e.target.value)}
                     />
                 </div>
+                <div className="space-y-2">
+                    <Label htmlFor="authorImage">Ảnh tác giả</Label>
+                    <Input
+                        id="authorImage"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleAuthorImageUpload(e.target.files?.[0] as File)}
+                        disabled={uploadingAuthorImage}
+                    />
+                    {authorImage && (
+                        <div className="mt-2">
+                            <img src={authorImage} alt="Author Image" className="w-32 h-32 object-cover rounded-full" />
+                        </div>
+                    )}
+                    {uploadingAuthorImage && <p>Đang tải ảnh tác giả lên...</p>}
+                </div>
+
                 <div className="space-y-2">
                     <Label htmlFor="description">Mô tả</Label>
                     <Textarea

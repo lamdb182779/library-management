@@ -27,11 +27,42 @@ export function AddNew({
     const [tags, setTags] = useState<any[]>([])
     const [positions, setPositions] = useState<any[]>([])
     const [quantity, setQuantity] = useState(1);
+    const [coverImage, setCoverImage] = useState<string | null>(null); // URL ảnh bìa
+    const [uploading, setUploading] = useState(false); // Trạng thái upload ảnh
+
 
     const { trigger, isMutating } = useSWRMutation(`/book`, poster)
 
+    const handleUpload = async (file: File) => {
+        if (!file) return;
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "qldtapp");
+        formData.append("folder", "book_covers");
+
+        const CLOUDINARY_CLOUD_NAME = "dnhhpdwnh";
+
+        try {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error("Upload thất bại");
+
+            const data = await response.json();
+            setCoverImage(data.secure_url); // URL ảnh bìa
+        } catch (error) {
+            console.error("Lỗi khi upload ảnh:", error);
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleSubmit = async () => {
-        const post = await trigger({
+        const postData = {
             name,
             describe,
             publisherId: publisher.id,
@@ -39,7 +70,11 @@ export function AddNew({
             tagIds: tags.map(tag => tag.id),
             positionIds: positions.map(position => position.id),
             quantity,
-        });
+            image: coverImage,
+        };
+
+        const post = await trigger(postData);
+
         if (post) {
             mutate();
             setName("");
@@ -49,6 +84,7 @@ export function AddNew({
             setTags([]);
             setPositions([]);
             setQuantity(1);
+            setCoverImage(null);
         }
     };
 
@@ -87,6 +123,22 @@ export function AddNew({
                         value={describe}
                         onChange={(e) => setDescribe(e.target.value)}
                     />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="coverImage">Ảnh bìa</Label>
+                    <Input
+                        id="coverImage"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleUpload(e.target.files?.[0] as File)}
+                        disabled={uploading}
+                    />
+                    {coverImage && (
+                        <div className="mt-2">
+                            <img src={coverImage} alt="Book Cover" className="w-32 h-48 object-cover rounded-md" />
+                        </div>
+                    )}
+                    {uploading && <p>Đang tải ảnh lên...</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="publisher">Nhà xuất bản</Label>
